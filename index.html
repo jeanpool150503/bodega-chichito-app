@@ -58,17 +58,6 @@
 
         .product-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-        /* Pantalla de Perfil / Mensaje */
-        #profile-view {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            text-align: center;
-            min-height: 50vh;
-        }
-
         .item-card {
             background: var(--surface);
             border-radius: 16px;
@@ -104,7 +93,18 @@
         .item-name { font-size: 0.9rem; font-weight: 600; line-height: 1.2; height: 2.4em; overflow: hidden; }
         .item-price { font-size: 1rem; font-weight: 700; color: #1e293b; margin-top: auto; }
 
-        /* Estilos del Modal (Detalle) */
+        /* Pantalla de Perfil */
+        #profile-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            min-height: 50vh;
+        }
+
+        /* Modal (Detalle) */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -129,10 +129,8 @@
 
         .modal-overlay.active { display: flex; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
-
         .modal-handle { width: 40px; height: 5px; background: #e2e8f0; border-radius: 10px; margin: 0 auto 15px; }
         .modal-img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
-        
         .history-tag {
             font-size: 0.75rem;
             color: var(--text-body);
@@ -193,7 +191,6 @@
             <h2 id="modalName" style="margin: 5px 0 10px 0;"></h2>
             <div id="modalDesc" style="color: var(--text-body); font-size: 0.95rem; margin-bottom: 15px;"></div>
             <div id="modalPrice" style="font-size: 1.5rem; font-weight: 800; color: var(--primary);"></div>
-            
             <div id="modalHistory" class="history-tag"></div>
         </div>
     </div>
@@ -212,7 +209,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDubf98-7P2UI8XY-kJyt4GFIb9HT0Bh6g",
@@ -244,6 +241,7 @@
             return Math.floor(seconds) + " segundos";
         }
 
+        // --- ACTUALIZACIÓN EN TIEMPO REAL OPTIMIZADA ---
         onSnapshot(collection(db, "productos"), (snap) => {
             allProducts = [];
             snap.forEach(doc => {
@@ -251,7 +249,7 @@
                 if(data.visible !== false) allProducts.push({id: doc.id, ...data});
             });
             document.getElementById('loader').style.display = 'none';
-            renderWorkerProducts();
+            renderWorkerProducts(); // Redibuja cada vez que Firebase avisa de un cambio
         });
 
         window.changeTab = (tab) => {
@@ -286,11 +284,12 @@
 
         function renderWorkerProducts() {
             const grid = document.getElementById('worker-grid');
-            grid.innerHTML = '';
+            grid.innerHTML = ''; // Limpia el grid para evitar duplicados al actualizar
             
-            let listToRender = allProducts;
+            let listToRender = [...allProducts];
+
             if (currentTab === 'ofertas') {
-                listToRender = allProducts.filter(p => p.etiqueta === 'oferta');
+                listToRender = listToRender.filter(p => p.etiqueta && p.etiqueta.toLowerCase() === 'oferta');
             }
 
             const term = document.getElementById('workerSearch').value.toLowerCase();
@@ -299,12 +298,11 @@
             }
 
             if (listToRender.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:50px; color:gray;">No hay productos para mostrar</div>`;
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:50px; color:gray;">No hay productos</div>`;
                 return;
             }
 
             listToRender.forEach(p => {
-                // GENERAR ETIQUETA VISUAL
                 let badgeHtml = '';
                 if (p.etiqueta && p.etiqueta !== 'ninguno') {
                     const tag = p.etiqueta.toLowerCase();
@@ -316,7 +314,7 @@
                 card.onclick = () => openModal(p);
                 card.innerHTML = `
                     ${badgeHtml}
-                    <img src="${p.imagen || 'https://via.placeholder.com/150'}" class="item-img">
+                    <img src="${p.imagen || 'https://via.placeholder.com/150'}" class="item-img" loading="lazy">
                     <div class="item-info">
                         <span class="item-cat">${p.categoria}</span>
                         <span class="item-name">${p.nombre}</span>
@@ -339,7 +337,6 @@
             const actualizado = p.updatedAt ? `<br>Actualizado hace ${timeAgo(p.updatedAt)} por ${p.actualizadoPor || 'Admin'}` : '';
             
             document.getElementById('modalHistory').innerHTML = `<i data-lucide="history" size="14" style="vertical-align:middle; margin-right:5px;"></i> ${creado} ${actualizado}`;
-            
             document.getElementById('modalOverlay').classList.add('active');
             lucide.createIcons();
         };
