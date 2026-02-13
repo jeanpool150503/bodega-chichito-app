@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bodega Chichito - App Equipo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --bg-app: #f8fafc;
+            --surface: #ffffff;
+            --text-title: #0f172a;
+            --text-body: #64748b;
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            background-color: var(--bg-app); 
+            color: var(--text-title);
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .app-header {
+            position: fixed;
+            top: 0; width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: calc(var(--safe-area-top) + 15px) 20px 15px 20px;
+            z-index: 100;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .header-top h1 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+
+        .search-container {
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .search-container input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.95rem; }
+
+        /* Contenido */
+        .app-content {
+            padding: calc(var(--safe-area-top) + 120px) 15px calc(var(--safe-area-bottom) + 80px) 15px;
+        }
+
+        .product-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* Pantalla de Perfil / Mensaje */
+        #profile-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+            min-height: 50vh;
+        }
+
+        .item-card {
+            background: var(--surface);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .item-img { width: 100%; height: 130px; object-fit: cover; background: #f1f5f9; }
+        .item-info { padding: 10px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .item-cat { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: var(--primary); }
+        .item-name { font-size: 0.9rem; font-weight: 600; line-height: 1.2; height: 2.4em; overflow: hidden; }
+        .item-price { font-size: 1rem; font-weight: 700; color: #1e293b; margin-top: auto; }
+
+        /* Estilos del Modal (Detalle) */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1000;
+            justify-content: flex-end;
+            flex-direction: column;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-height: 90vh;
+            border-radius: 24px 24px 0 0;
+            padding: 20px;
+            padding-bottom: calc(var(--safe-area-bottom) + 20px);
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active { display: flex; }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+
+        .modal-handle { width: 40px; height: 5px; background: #e2e8f0; border-radius: 10px; margin: 0 auto 15px; }
+        .modal-img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
+        
+        .history-tag {
+            font-size: 0.75rem;
+            color: var(--text-body);
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 20px;
+            line-height: 1.4;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; width: 100%;
+            background: var(--surface);
+            padding: 10px 0 calc(var(--safe-area-bottom) + 10px) 0;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #e2e8f0;
+            z-index: 100;
+        }
+
+        .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #94a3b8; text-decoration: none; font-size: 0.7rem; border:none; background:none; cursor:pointer; }
+        .nav-link.active { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-top">
+            <h1 id="app-title">Bodega Chichito</h1>
+            <i data-lucide="bell" size="20"></i>
+        </div>
+        <div class="search-container" id="search-bar">
+            <i data-lucide="search" size="18" color="#94a3b8"></i>
+            <input type="text" id="workerSearch" placeholder="Buscar producto..." oninput="filterWorkerProducts()">
+        </div>
+    </header>
+
+    <main class="app-content">
+        <div id="loader" style="text-align: center; padding: 20px;">Cargando catálogo...</div>
+        <div class="product-list" id="worker-grid"></div>
+
+        <div id="profile-view">
+            <div style="background: #eef2ff; padding: 20px; border-radius: 50%; margin-bottom: 20px;">
+                <i data-lucide="construction" size="48" color="#4f46e5"></i>
+            </div>
+            <h2 style="font-size: 1.2rem; margin-bottom: 10px;">Perfil de Equipo</h2>
+            <p style="color: var(--text-body); line-height: 1.5;">Este apartado aún no está disponible.<br>Estamos trabajando en nuevas funciones para el equipo.</p>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-handle"></div>
+            <img id="modalImg" class="modal-img" src="">
+            <div id="modalCat" class="item-cat"></div>
+            <h2 id="modalName" style="margin: 5px 0 10px 0;"></h2>
+            <div id="modalDesc" style="color: var(--text-body); font-size: 0.95rem; margin-bottom: 15px;"></div>
+            <div id="modalPrice" style="font-size: 1.5rem; font-weight: 800; color: var(--primary);"></div>
+            
+            <div id="modalHistory" class="history-tag"></div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button onclick="changeTab('stock')" class="nav-link active" id="tab-stock">
+            <i data-lucide="layout-grid"></i>Stock
+        </button>
+        <button onclick="changeTab('ofertas')" class="nav-link" id="tab-ofertas">
+            <i data-lucide="star"></i>Ofertas
+        </button>
+        <button onclick="changeTab('perfil')" class="nav-link" id="tab-perfil">
+            <i data-lucide="user"></i>Perfil
+        </button>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDubf98-7P2UI8XY-kJyt4GFIb9HT0Bh6g",
+            authDomain: "caneteservicios.firebaseapp.com",
+            projectId: "caneteservicios",
+            storageBucket: "caneteservicios.firebasestorage.app",
+            messagingSenderId: "1074586569660",
+            appId: "1:1074586569660:web:00f2252b017071609379b9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let allProducts = [];
+        let currentTab = 'stock';
+
+        function timeAgo(date) {
+            if (!date) return "desconocido";
+            const seconds = Math.floor((new Date() - date.toDate()) / 1000);
+            let interval = Math.floor(seconds / 31536000);
+            if (interval > 1) return interval + " años";
+            interval = Math.floor(seconds / 2592000);
+            if (interval > 1) return interval + " meses";
+            interval = Math.floor(seconds / 86400);
+            if (interval > 1) return interval + " días";
+            interval = Math.floor(seconds / 3600);
+            if (interval > 1) return interval + " horas";
+            interval = Math.floor(seconds / 60);
+            if (interval > 1) return interval + " minutos";
+            return Math.floor(seconds) + " segundos";
+        }
+
+        onSnapshot(collection(db, "productos"), (snap) => {
+            allProducts = [];
+            snap.forEach(doc => {
+                const data = doc.data();
+                if(data.visible !== false) allProducts.push({id: doc.id, ...data});
+            });
+            document.getElementById('loader').style.display = 'none';
+            renderWorkerProducts();
+        });
+
+        // FUNCION PARA CAMBIAR DE PESTAÑA
+        window.changeTab = (tab) => {
+            currentTab = tab;
+            
+            // Actualizar UI de botones
+            document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            // Reset de vistas
+            const grid = document.getElementById('worker-grid');
+            const profile = document.getElementById('profile-view');
+            const searchBar = document.getElementById('search-bar');
+            const title = document.getElementById('app-title');
+
+            grid.style.display = 'none';
+            profile.style.display = 'none';
+            searchBar.style.display = 'flex';
+
+            if (tab === 'stock') {
+                title.innerText = "Bodega Chichito";
+                grid.style.display = 'grid';
+                renderWorkerProducts();
+            } else if (tab === 'ofertas') {
+                title.innerText = "Ofertas del Día";
+                grid.style.display = 'grid';
+                renderWorkerProducts();
+            } else if (tab === 'perfil') {
+                title.innerText = "Mi Perfil";
+                searchBar.style.display = 'none';
+                profile.style.display = 'flex';
+            }
+            lucide.createIcons();
+        };
+
+        function renderWorkerProducts() {
+            const grid = document.getElementById('worker-grid');
+            grid.innerHTML = '';
+            
+            // Filtrar según pestaña
+            let listToRender = allProducts;
+            if (currentTab === 'ofertas') {
+                listToRender = allProducts.filter(p => p.etiqueta === 'oferta');
+            }
+
+            // Filtrar si hay búsqueda
+            const term = document.getElementById('workerSearch').value.toLowerCase();
+            if (term) {
+                listToRender = listToRender.filter(p => p.nombre.toLowerCase().includes(term));
+            }
+
+            if (listToRender.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:50px; color:gray;">No hay productos para mostrar</div>`;
+                return;
+            }
+
+            listToRender.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.onclick = () => openModal(p);
+                card.innerHTML = `
+                    <img src="${p.imagen || 'https://via.placeholder.com/150'}" class="item-img">
+                    <div class="item-info">
+                        <span class="item-cat">${p.categoria}</span>
+                        <span class="item-name">${p.nombre}</span>
+                        <span class="item-price">S/ ${p.precio}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        window.openModal = (p) => {
+            document.getElementById('modalImg').src = p.imagen || 'https://via.placeholder.com/150';
+            document.getElementById('modalCat').innerText = p.categoria;
+            document.getElementById('modalName').innerText = p.nombre;
+            document.getElementById('modalDesc').innerText = p.descripcion || 'Sin descripción disponible.';
+            document.getElementById('modalPrice').innerText = `S/ ${p.precio}`;
+            
+            const creado = p.createdAt ? `Creado hace ${timeAgo(p.createdAt)} por ${p.creadoPor || 'Admin'}` : '';
+            const actualizado = p.updatedAt ? `<br>Actualizado hace ${timeAgo(p.updatedAt)} por ${p.actualizadoPor || 'Admin'}` : '';
+            
+            document.getElementById('modalHistory').innerHTML = `<i data-lucide="history" size="14" style="vertical-align:middle; margin-right:5px;"></i> ${creado} ${actualizado}`;
+            
+            document.getElementById('modalOverlay').classList.add('active');
+            lucide.createIcons();
+        };
+
+        window.closeModal = () => {
+            document.getElementById('modalOverlay').classList.remove('active');
+        };
+
+        window.filterWorkerProducts = () => {
+            renderWorkerProducts();
+        };
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
