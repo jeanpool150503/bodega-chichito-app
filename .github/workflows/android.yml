@@ -8,19 +8,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Prepare Web Directory
+        run: |
+          mkdir www
+          cp index.html www/
       - name: Install Dependencies
         run: |
           npm install @capacitor/core @capacitor/cli @capacitor/android
       - name: Initialize Capacitor
         run: |
-          npx cap init "Bodega Chichito" com.chichito.app --web-dir .
+          npx cap init "Bodega Chichito" com.chichito.app --web-dir www
       - name: Add Android Platform
         run: |
-          # Intentar añadir plataforma, si falla porque ya existe, continuar
-          npx cap add android || echo "La plataforma ya existe"
-      - name: Sync Capacitor
-        run: |
-          npx cap sync android
+          npx cap add android
       - name: Build APK
         run: |
           cd android && ./gradlew assembleDebug
