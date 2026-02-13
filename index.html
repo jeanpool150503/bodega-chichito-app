@@ -81,6 +81,24 @@
         }
 
         .item-img { width: 100%; height: 130px; object-fit: cover; background: #f1f5f9; }
+        
+        /* ETIQUETAS VISUALES */
+        .badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: white;
+            z-index: 10;
+        }
+        .badge-oferta { background: #ef4444; }
+        .badge-nuevo { background: #10b981; }
+        .badge-popular { background: #f59e0b; }
+
         .item-info { padding: 10px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .item-cat { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: var(--primary); }
         .item-name { font-size: 0.9rem; font-weight: 600; line-height: 1.2; height: 2.4em; overflow: hidden; }
@@ -236,15 +254,11 @@
             renderWorkerProducts();
         });
 
-        // FUNCION PARA CAMBIAR DE PESTAÑA
         window.changeTab = (tab) => {
             currentTab = tab;
-            
-            // Actualizar UI de botones
             document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
 
-            // Reset de vistas
             const grid = document.getElementById('worker-grid');
             const profile = document.getElementById('profile-view');
             const searchBar = document.getElementById('search-bar');
@@ -274,13 +288,11 @@
             const grid = document.getElementById('worker-grid');
             grid.innerHTML = '';
             
-            // Filtrar según pestaña
             let listToRender = allProducts;
             if (currentTab === 'ofertas') {
                 listToRender = allProducts.filter(p => p.etiqueta === 'oferta');
             }
 
-            // Filtrar si hay búsqueda
             const term = document.getElementById('workerSearch').value.toLowerCase();
             if (term) {
                 listToRender = listToRender.filter(p => p.nombre.toLowerCase().includes(term));
@@ -292,10 +304,18 @@
             }
 
             listToRender.forEach(p => {
+                // GENERAR ETIQUETA VISUAL
+                let badgeHtml = '';
+                if (p.etiqueta && p.etiqueta !== 'ninguno') {
+                    const tag = p.etiqueta.toLowerCase();
+                    badgeHtml = `<span class="badge badge-${tag}">${p.etiqueta}</span>`;
+                }
+
                 const card = document.createElement('div');
                 card.className = 'item-card';
                 card.onclick = () => openModal(p);
                 card.innerHTML = `
+                    ${badgeHtml}
                     <img src="${p.imagen || 'https://via.placeholder.com/150'}" class="item-img">
                     <div class="item-info">
                         <span class="item-cat">${p.categoria}</span>
