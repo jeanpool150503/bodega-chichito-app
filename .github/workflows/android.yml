@@ -14,7 +14,13 @@ jobs:
       - name: Initialize Capacitor
         run: |
           npx cap init "Bodega Chichito" com.chichito.app --web-dir .
-          npx cap add android
+      - name: Add Android Platform
+        run: |
+          # Intentar añadir plataforma, si falla porque ya existe, continuar
+          npx cap add android || echo "La plataforma ya existe"
+      - name: Sync Capacitor
+        run: |
+          npx cap sync android
       - name: Build APK
         run: |
           cd android && ./gradlew assembleDebug
