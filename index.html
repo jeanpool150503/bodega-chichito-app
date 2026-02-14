@@ -65,9 +65,19 @@
             justify-content: center;
             gap: 8px;
         }
+        
         body.pulling .refresh-indicator {
             height: 40px;
             margin-bottom: 10px;
+        }
+
+        /* Animación de rotación para el icono */
+        .spinning {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         /* Contenido */
@@ -179,7 +189,7 @@
 
     <main class="app-content">
         <div id="refresh-ui" class="refresh-indicator">
-            <i data-lucide="refresh-cw" size="16"></i> Actualizando...
+            <i id="refresh-icon" data-lucide="refresh-cw" size="16"></i> <span id="refresh-text">Actualizando...</span>
         </div>
 
         <div id="loader" style="text-align: center; padding: 20px;">Cargando catálogo...</div>
@@ -220,7 +230,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, getDocs, terminate, initializeFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDubf98-7P2UI8XY-kJyt4GFIb9HT0Bh6g",
@@ -262,7 +272,7 @@
             renderWorkerProducts();
         });
 
-        // --- GESTO DESLIZAR PARA ACTUALIZAR (CON PETICIÓN FORZADA) ---
+        // --- GESTO DESLIZAR PARA ACTUALIZAR (CONEXIÓN FORZADA AL SERVIDOR) ---
         let startY = 0;
         window.addEventListener('touchstart', (e) => {
             startY = e.touches[0].pageY;
@@ -271,6 +281,7 @@
         window.addEventListener('touchmove', (e) => {
             const moveY = e.touches[0].pageY;
             const diff = moveY - startY;
+            // Solo activamos si estamos arriba del todo y deslizamos más de 80px
             if (window.scrollY === 0 && diff > 80) {
                 document.body.classList.add('pulling');
             }
@@ -278,23 +289,34 @@
 
         window.addEventListener('touchend', async () => {
             if (document.body.classList.contains('pulling')) {
-                if (navigator.vibrate) navigator.vibrate(50); // Pequeña vibración de confirmación
+                const icon = document.getElementById('refresh-icon');
+                const text = document.getElementById('refresh-text');
+                
+                if (navigator.vibrate) navigator.vibrate(50);
+                icon.classList.add('spinning');
+                text.innerText = "Conectando...";
 
                 try {
-                    // Forzamos la obtención de datos ignorando el cache si es posible
+                    // La clave aquí: Forzamos la descarga desde el SERVIDOR ignorando el caché local
                     const querySnapshot = await getDocs(collection(db, "productos"));
+                    
                     allProducts = [];
                     querySnapshot.forEach((doc) => {
                         const data = doc.data();
                         if(data.visible !== false) allProducts.push({id: doc.id, ...data});
                     });
+                    
                     renderWorkerProducts();
+                    text.innerText = "¡Actualizado!";
                 } catch (err) {
                     console.error("Error al actualizar:", err);
+                    text.innerText = "Error de conexión";
                 } finally {
                     setTimeout(() => {
                         document.body.classList.remove('pulling');
-                    }, 500);
+                        icon.classList.remove('spinning');
+                        text.innerText = "Actualizando...";
+                    }, 1000);
                 }
             }
         });
