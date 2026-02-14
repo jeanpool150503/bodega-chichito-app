@@ -110,13 +110,14 @@
 
         .item-card {
             background: var(--surface);
-            border-radius: 16px;
+            border-radius: 166px;
             overflow: hidden;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
             position: relative;
             cursor: pointer;
+            border-radius: 16px;
         }
 
         .item-img { width: 100%; height: 130px; object-fit: cover; background: #f1f5f9; pointer-events: none; }
@@ -216,14 +217,14 @@
                     <i data-lucide="more-vertical" size="22"></i>
                 </div>
                 <div id="floatingMenu" class="floating-menu">
-                    <button class="menu-item" onclick="window.location.href='reporte.html'">
+                    <button class="menu-item" onclick="window.location.href='./reporte.html'">
                         <i data-lucide="alert-triangle" size="18"></i> Reportar error
                     </button>
                     <button class="menu-item" onclick="toggleDarkMode()">
                         <i data-lucide="moon" size="18" id="darkIcon"></i> <span id="darkText">Activar modo oscuro</span>
                     </button>
                     <div class="menu-divider"></div>
-                    <button class="menu-item" onclick="window.location.href='sobrenosotros.html'">
+                    <button class="menu-item" onclick="window.location.href='./sobrenosotros.html'">
                         <i data-lucide="info" size="18"></i> Sobre nosotros
                     </button>
                 </div>
