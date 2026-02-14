@@ -73,7 +73,7 @@
         /* Contenido */
         .app-content {
             padding: calc(var(--safe-area-top) + 120px) 15px calc(var(--safe-area-bottom) + 80px) 15px;
-            min-height: 101vh; /* Necesario para permitir el scroll y el pull */
+            min-height: 101vh;
         }
 
         .product-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -91,11 +91,9 @@
 
         .item-img { width: 100%; height: 130px; object-fit: cover; background: #f1f5f9; }
         
-        /* ETIQUETAS VISUALES */
         .badge {
             position: absolute;
-            top: 8px;
-            left: 8px;
+            top: 8px; left: 8px;
             padding: 4px 8px;
             border-radius: 6px;
             font-size: 0.6rem;
@@ -113,7 +111,6 @@
         .item-name { font-size: 0.9rem; font-weight: 600; line-height: 1.2; height: 2.4em; overflow: hidden; }
         .item-price { font-size: 1rem; font-weight: 700; color: #1e293b; margin-top: auto; }
 
-        /* Pantalla de Perfil */
         #profile-view {
             display: none;
             flex-direction: column;
@@ -124,7 +121,6 @@
             min-height: 50vh;
         }
 
-        /* Modal (Detalle) */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -134,7 +130,6 @@
             justify-content: flex-end;
             flex-direction: column;
         }
-
         .modal-content {
             background: white;
             width: 100%;
@@ -146,22 +141,15 @@
             transition: transform 0.3s ease-out;
             overflow-y: auto;
         }
-
         .modal-overlay.active { display: flex; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
         .modal-handle { width: 40px; height: 5px; background: #e2e8f0; border-radius: 10px; margin: 0 auto 15px; }
         .modal-img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
         .history-tag {
-            font-size: 0.75rem;
-            color: var(--text-body);
-            background: #f1f5f9;
-            padding: 10px;
-            border-radius: 10px;
-            margin-top: 20px;
-            line-height: 1.4;
+            font-size: 0.75rem; color: var(--text-body); background: #f1f5f9;
+            padding: 10px; border-radius: 10px; margin-top: 20px; line-height: 1.4;
         }
 
-        /* Bottom Nav */
         .bottom-nav {
             position: fixed;
             bottom: 0; width: 100%;
@@ -172,7 +160,6 @@
             border-top: 1px solid #e2e8f0;
             z-index: 100;
         }
-
         .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #94a3b8; text-decoration: none; font-size: 0.7rem; border:none; background:none; cursor:pointer; }
         .nav-link.active { color: var(--primary); }
     </style>
@@ -233,7 +220,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDubf98-7P2UI8XY-kJyt4GFIb9HT0Bh6g",
@@ -265,7 +252,6 @@
             return Math.floor(seconds) + " segundos";
         }
 
-        // --- ACTUALIZACIÓN EN TIEMPO REAL OPTIMIZADA ---
         onSnapshot(collection(db, "productos"), (snap) => {
             allProducts = [];
             snap.forEach(doc => {
@@ -276,7 +262,7 @@
             renderWorkerProducts();
         });
 
-        // --- GESTO DESLIZAR PARA ACTUALIZAR (PARA AHORRO DE ENERGÍA) ---
+        // --- GESTO DESLIZAR PARA ACTUALIZAR (CON PETICIÓN FORZADA) ---
         let startY = 0;
         window.addEventListener('touchstart', (e) => {
             startY = e.touches[0].pageY;
@@ -285,19 +271,31 @@
         window.addEventListener('touchmove', (e) => {
             const moveY = e.touches[0].pageY;
             const diff = moveY - startY;
-            // Si está al inicio de la página y desliza hacia abajo más de 80px
             if (window.scrollY === 0 && diff > 80) {
                 document.body.classList.add('pulling');
             }
         }, {passive: true});
 
-        window.addEventListener('touchend', () => {
+        window.addEventListener('touchend', async () => {
             if (document.body.classList.contains('pulling')) {
-                // Pequeño retraso para que se vea la animación
-                setTimeout(() => {
-                    renderWorkerProducts(); // Forzamos el redibujado
-                    document.body.classList.remove('pulling');
-                }, 800);
+                if (navigator.vibrate) navigator.vibrate(50); // Pequeña vibración de confirmación
+
+                try {
+                    // Forzamos la obtención de datos ignorando el cache si es posible
+                    const querySnapshot = await getDocs(collection(db, "productos"));
+                    allProducts = [];
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        if(data.visible !== false) allProducts.push({id: doc.id, ...data});
+                    });
+                    renderWorkerProducts();
+                } catch (err) {
+                    console.error("Error al actualizar:", err);
+                } finally {
+                    setTimeout(() => {
+                        document.body.classList.remove('pulling');
+                    }, 500);
+                }
             }
         });
 
@@ -305,36 +303,29 @@
             currentTab = tab;
             document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
-
             const grid = document.getElementById('worker-grid');
             const profile = document.getElementById('profile-view');
             const searchBar = document.getElementById('search-bar');
             const title = document.getElementById('app-title');
 
-            grid.style.display = 'none';
-            profile.style.display = 'none';
-            searchBar.style.display = 'flex';
+            grid.style.display = 'none'; profile.style.display = 'none'; searchBar.style.display = 'flex';
 
             if (tab === 'stock') {
                 title.innerText = "Bodega Chichito";
                 grid.style.display = 'grid';
-                renderWorkerProducts();
             } else if (tab === 'ofertas') {
                 title.innerText = "Ofertas del Día";
                 grid.style.display = 'grid';
-                renderWorkerProducts();
             } else if (tab === 'perfil') {
                 title.innerText = "Mi Perfil";
-                searchBar.style.display = 'none';
-                profile.style.display = 'flex';
+                searchBar.style.display = 'none'; profile.style.display = 'flex';
             }
-            lucide.createIcons();
+            renderWorkerProducts();
         };
 
         function renderWorkerProducts() {
             const grid = document.getElementById('worker-grid');
             grid.innerHTML = '';
-            
             let listToRender = [...allProducts];
 
             if (currentTab === 'ofertas') {
@@ -354,10 +345,8 @@
             listToRender.forEach(p => {
                 let badgeHtml = '';
                 if (p.etiqueta && p.etiqueta !== 'ninguno') {
-                    const tag = p.etiqueta.toLowerCase();
-                    badgeHtml = `<span class="badge badge-${tag}">${p.etiqueta}</span>`;
+                    badgeHtml = `<span class="badge badge-${p.etiqueta.toLowerCase()}">${p.etiqueta}</span>`;
                 }
-
                 const card = document.createElement('div');
                 card.className = 'item-card';
                 card.onclick = () => openModal(p);
@@ -381,22 +370,15 @@
             document.getElementById('modalName').innerText = p.nombre;
             document.getElementById('modalDesc').innerText = p.descripcion || 'Sin descripción disponible.';
             document.getElementById('modalPrice').innerText = `S/ ${p.precio}`;
-            
             const creado = p.createdAt ? `Creado hace ${timeAgo(p.createdAt)} por ${p.creadoPor || 'Admin'}` : '';
             const actualizado = p.updatedAt ? `<br>Actualizado hace ${timeAgo(p.updatedAt)} por ${p.actualizadoPor || 'Admin'}` : '';
-            
             document.getElementById('modalHistory').innerHTML = `<i data-lucide="history" size="14" style="vertical-align:middle; margin-right:5px;"></i> ${creado} ${actualizado}`;
             document.getElementById('modalOverlay').classList.add('active');
             lucide.createIcons();
         };
 
-        window.closeModal = () => {
-            document.getElementById('modalOverlay').classList.remove('active');
-        };
-
-        window.filterWorkerProducts = () => {
-            renderWorkerProducts();
-        };
+        window.closeModal = () => document.getElementById('modalOverlay').classList.remove('active');
+        window.filterWorkerProducts = () => renderWorkerProducts();
 
         lucide.createIcons();
     </script>
