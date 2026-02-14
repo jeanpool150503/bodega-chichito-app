@@ -51,9 +51,29 @@
         }
         .search-container input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.95rem; }
 
+        /* --- ESTILO PULL TO REFRESH --- */
+        .refresh-indicator {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+            height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        body.pulling .refresh-indicator {
+            height: 40px;
+            margin-bottom: 10px;
+        }
+
         /* Contenido */
         .app-content {
             padding: calc(var(--safe-area-top) + 120px) 15px calc(var(--safe-area-bottom) + 80px) 15px;
+            min-height: 101vh; /* Necesario para permitir el scroll y el pull */
         }
 
         .product-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -157,7 +177,7 @@
         .nav-link.active { color: var(--primary); }
     </style>
 </head>
-<body>
+<body id="app-body">
 
     <header class="app-header">
         <div class="header-top">
@@ -171,6 +191,10 @@
     </header>
 
     <main class="app-content">
+        <div id="refresh-ui" class="refresh-indicator">
+            <i data-lucide="refresh-cw" size="16"></i> Actualizando...
+        </div>
+
         <div id="loader" style="text-align: center; padding: 20px;">Cargando catálogo...</div>
         <div class="product-list" id="worker-grid"></div>
 
@@ -249,7 +273,32 @@
                 if(data.visible !== false) allProducts.push({id: doc.id, ...data});
             });
             document.getElementById('loader').style.display = 'none';
-            renderWorkerProducts(); // Redibuja cada vez que Firebase avisa de un cambio
+            renderWorkerProducts();
+        });
+
+        // --- GESTO DESLIZAR PARA ACTUALIZAR (PARA AHORRO DE ENERGÍA) ---
+        let startY = 0;
+        window.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].pageY;
+        }, {passive: true});
+
+        window.addEventListener('touchmove', (e) => {
+            const moveY = e.touches[0].pageY;
+            const diff = moveY - startY;
+            // Si está al inicio de la página y desliza hacia abajo más de 80px
+            if (window.scrollY === 0 && diff > 80) {
+                document.body.classList.add('pulling');
+            }
+        }, {passive: true});
+
+        window.addEventListener('touchend', () => {
+            if (document.body.classList.contains('pulling')) {
+                // Pequeño retraso para que se vea la animación
+                setTimeout(() => {
+                    renderWorkerProducts(); // Forzamos el redibujado
+                    document.body.classList.remove('pulling');
+                }, 800);
+            }
         });
 
         window.changeTab = (tab) => {
@@ -284,7 +333,7 @@
 
         function renderWorkerProducts() {
             const grid = document.getElementById('worker-grid');
-            grid.innerHTML = ''; // Limpia el grid para evitar duplicados al actualizar
+            grid.innerHTML = '';
             
             let listToRender = [...allProducts];
 
