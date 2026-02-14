@@ -25,6 +25,10 @@
             background-color: var(--bg-app); 
             color: var(--text-title);
             overflow-x: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         /* Header */
@@ -41,6 +45,17 @@
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .header-top h1 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--primary); }
 
+        .bell-container { position: relative; cursor: pointer; padding: 5px; }
+        .notification-badge {
+            position: absolute;
+            top: 4px; right: 4px;
+            width: 10px; height: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: none;
+        }
+
         .search-container {
             background: #f1f5f9;
             border-radius: 12px;
@@ -49,7 +64,15 @@
             align-items: center;
             gap: 10px;
         }
-        .search-container input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.95rem; }
+        .search-container input { 
+            border: none; 
+            background: transparent; 
+            width: 100%; 
+            outline: none; 
+            font-size: 0.95rem; 
+            -webkit-user-select: text;
+            user-select: text;
+        }
 
         /* Contenido */
         .app-content {
@@ -69,9 +92,8 @@
             cursor: pointer;
         }
 
-        .item-img { width: 100%; height: 130px; object-fit: cover; background: #f1f5f9; }
+        .item-img { width: 100%; height: 130px; object-fit: cover; background: #f1f5f9; pointer-events: none; }
         
-        /* ETIQUETAS VISUALES */
         .badge {
             position: absolute;
             top: 8px;
@@ -93,7 +115,6 @@
         .item-name { font-size: 0.9rem; font-weight: 600; line-height: 1.2; height: 2.4em; overflow: hidden; }
         .item-price { font-size: 1rem; font-weight: 700; color: #1e293b; margin-top: auto; }
 
-        /* Pantalla de Perfil */
         #profile-view {
             display: none;
             flex-direction: column;
@@ -125,11 +146,12 @@
             transform: translateY(100%);
             transition: transform 0.3s ease-out;
             overflow-y: auto;
+            touch-action: none; /* Crucial para el deslizamiento manual */
         }
 
         .modal-overlay.active { display: flex; }
         .modal-overlay.active .modal-content { transform: translateY(0); }
-        .modal-handle { width: 40px; height: 5px; background: #e2e8f0; border-radius: 10px; margin: 0 auto 15px; }
+        .modal-handle { width: 40px; height: 5px; background: #e2e8f0; border-radius: 10px; margin: 0 auto 15px; cursor: grab; }
         .modal-img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
         .history-tag {
             font-size: 0.75rem;
@@ -162,7 +184,10 @@
     <header class="app-header">
         <div class="header-top">
             <h1 id="app-title">Bodega Chichito</h1>
-            <i data-lucide="bell" size="20"></i>
+            <div class="bell-container" onclick="openNotifications()">
+                <i data-lucide="bell" size="20"></i>
+                <div id="bellBadge" class="notification-badge"></div>
+            </div>
         </div>
         <div class="search-container" id="search-bar">
             <i data-lucide="search" size="18" color="#94a3b8"></i>
@@ -184,12 +209,12 @@
     </main>
 
     <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
-        <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-content" id="modalContent" onclick="event.stopPropagation()">
             <div class="modal-handle"></div>
             <img id="modalImg" class="modal-img" src="">
             <div id="modalCat" class="item-cat"></div>
             <h2 id="modalName" style="margin: 5px 0 10px 0;"></h2>
-            <div id="modalDesc" style="color: var(--text-body); font-size: 0.95rem; margin-bottom: 15px;"></div>
+            <div id="modalDesc" style="white-space: pre-line; color: var(--text-body); font-size: 0.95rem; margin-bottom: 15px;"></div>
             <div id="modalPrice" style="font-size: 1.5rem; font-weight: 800; color: var(--primary);"></div>
             <div id="modalHistory" class="history-tag"></div>
         </div>
@@ -241,16 +266,53 @@
             return Math.floor(seconds) + " segundos";
         }
 
-        // --- ACTUALIZACIÓN EN TIEMPO REAL OPTIMIZADA ---
         onSnapshot(collection(db, "productos"), (snap) => {
             allProducts = [];
+            let hayCambiosRecientes = false;
+            const unaHora = 60 * 60 * 1000;
+            const ahora = new Date();
+
             snap.forEach(doc => {
                 const data = doc.data();
-                if(data.visible !== false) allProducts.push({id: doc.id, ...data});
+                if(data.visible !== false) {
+                    allProducts.push({id: doc.id, ...data});
+                    if(data.updatedAt && (ahora - data.updatedAt.toDate() < unaHora)) {
+                        hayCambiosRecientes = true;
+                    }
+                }
             });
+
+            document.getElementById('bellBadge').style.display = hayCambiosRecientes ? 'block' : 'none';
             document.getElementById('loader').style.display = 'none';
-            renderWorkerProducts(); // Redibuja cada vez que Firebase avisa de un cambio
+            renderWorkerProducts();
         });
+
+        window.openNotifications = () => {
+            const hoy = new Date();
+            const novedades = allProducts.filter(p => {
+                if (!p.updatedAt) return false;
+                const diff = hoy - p.updatedAt.toDate();
+                return diff < (24 * 60 * 60 * 1000);
+            });
+
+            if (novedades.length === 0) {
+                alert("No hay cambios de precios registrados hoy.");
+                return;
+            }
+
+            const lista = novedades.map(p => `• ${p.nombre}: S/ ${p.precio}`).join('\n');
+            
+            document.getElementById('modalImg').src = "https://cdn-icons-png.flaticon.com/512/3524/3524659.png";
+            document.getElementById('modalCat').innerText = "AVISO DE EQUIPO";
+            document.getElementById('modalName').innerText = "Cambios del Día";
+            document.getElementById('modalDesc').innerText = "Estos productos cambiaron de precio hoy. Actualiza las etiquetas del estante:\n\n" + lista;
+            document.getElementById('modalPrice').innerText = "";
+            document.getElementById('modalHistory').innerText = "Punto rojo apagado.";
+            
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('bellBadge').style.display = 'none';
+            lucide.createIcons();
+        };
 
         window.changeTab = (tab) => {
             currentTab = tab;
@@ -284,7 +346,7 @@
 
         function renderWorkerProducts() {
             const grid = document.getElementById('worker-grid');
-            grid.innerHTML = ''; // Limpia el grid para evitar duplicados al actualizar
+            grid.innerHTML = ''; 
             
             let listToRender = [...allProducts];
 
@@ -327,6 +389,8 @@
         }
 
         window.openModal = (p) => {
+            const mContent = document.getElementById('modalContent');
+            mContent.style.transform = 'translateY(0)'; // Reset posición
             document.getElementById('modalImg').src = p.imagen || 'https://via.placeholder.com/150';
             document.getElementById('modalCat').innerText = p.categoria;
             document.getElementById('modalName').innerText = p.nombre;
@@ -343,11 +407,42 @@
 
         window.closeModal = () => {
             document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('modalContent').style.transform = 'translateY(100%)';
         };
 
         window.filterWorkerProducts = () => {
             renderWorkerProducts();
         };
+
+        // --- LÓGICA DE DESLIZAMIENTO PARA CERRAR (SWIPE DOWN) ---
+        const modalContent = document.getElementById('modalContent');
+        let touchStartY = 0;
+        let touchMoveY = 0;
+
+        modalContent.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            modalContent.style.transition = 'none';
+        }, { passive: true });
+
+        modalContent.addEventListener('touchmove', (e) => {
+            touchMoveY = e.touches[0].clientY;
+            const deltaY = touchMoveY - touchStartY;
+            if (deltaY > 0) { // Solo permite mover hacia abajo
+                modalContent.style.transform = `translateY(${deltaY}px)`;
+            }
+        }, { passive: true });
+
+        modalContent.addEventListener('touchend', () => {
+            const deltaY = touchMoveY - touchStartY;
+            modalContent.style.transition = 'transform 0.3s ease-out';
+            if (deltaY > 150) { // Si se deslizó más de 150px, cerrar
+                closeModal();
+            } else {
+                modalContent.style.transform = 'translateY(0)';
+            }
+            touchStartY = 0;
+            touchMoveY = 0;
+        });
 
         lucide.createIcons();
     </script>
