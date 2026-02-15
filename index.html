@@ -18,7 +18,6 @@
             --safe-area-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        /* Variables Modo Oscuro */
         body.dark-theme {
             --bg-app: #0f172a;
             --surface: #1e293b;
@@ -31,178 +30,55 @@
 
         body { 
             font-family: 'Inter', sans-serif; 
-            margin: 0; 
-            background-color: var(--bg-app); 
-            color: var(--text-title);
-            overflow-x: hidden;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            transition: background-color 0.3s ease;
+            margin: 0; background-color: var(--bg-app); color: var(--text-title);
+            overflow-x: hidden; user-select: none; transition: background-color 0.3s ease;
         }
 
-        /* Header */
+        /* Vistas */
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        /* Header y Menú de 3 Puntos */
         .app-header {
-            position: fixed;
-            top: 0; width: 100%;
-            background: var(--surface);
-            backdrop-filter: blur(10px);
-            padding: calc(var(--safe-area-top) + 15px) 20px 15px 20px;
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
+            position: fixed; top: 0; width: 100%; background: var(--surface);
+            backdrop-filter: blur(10px); padding: calc(var(--safe-area-top) + 15px) 20px 15px 20px;
+            z-index: 100; border-bottom: 1px solid var(--border);
         }
-
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .header-top h1 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--primary); }
 
-        /* Menú Flotante */
-        .menu-container { position: relative; }
         .floating-menu {
-            position: absolute;
-            top: 35px; right: 0;
-            background: var(--surface);
-            min-width: 200px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            display: none;
-            flex-direction: column;
-            padding: 8px 0;
-            z-index: 200;
-            border: 1px solid var(--border);
+            position: absolute; top: 35px; right: 0; background: var(--surface);
+            min-width: 200px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none; flex-direction: column; padding: 8px 0; z-index: 200; border: 1px solid var(--border);
         }
         .floating-menu.active { display: flex; animation: fadeIn 0.2s ease; }
-        .menu-item {
-            background: none; border: none; padding: 12px 20px;
-            text-align: left; font-size: 0.95rem; color: var(--text-title);
-            cursor: pointer; display: flex; align-items: center; gap: 10px;
-        }
-        .menu-item:active { background: var(--bg-app); }
+        .menu-item { background: none; border: none; padding: 12px 20px; text-align: left; font-size: 0.95rem; color: var(--text-title); cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .menu-divider { border-top: 1px solid var(--border); margin: 4px 0; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .search-container {
-            background: var(--bg-app);
-            border-radius: 12px;
-            padding: 8px 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .search-container input { 
-            border: none; 
-            background: transparent; 
-            width: 100%; 
-            outline: none; 
-            font-size: 0.95rem; 
-            color: var(--text-title);
-            -webkit-user-select: text;
-            user-select: text;
-        }
+        /* Buscador */
+        .search-container { background: var(--bg-app); border-radius: 12px; padding: 8px 15px; display: flex; align-items: center; gap: 10px; }
+        .search-container input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.95rem; color: var(--text-title); }
 
-        /* Contenido */
-        .app-content {
-            padding: calc(var(--safe-area-top) + 120px) 15px calc(var(--safe-area-bottom) + 80px) 15px;
-        }
-
+        /* Contenido y Cards */
+        .app-content { padding: calc(var(--safe-area-top) + 120px) 15px calc(var(--safe-area-bottom) + 80px) 15px; }
         .product-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-        .item-card {
-            background: var(--surface);
-            border-radius: 166px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            cursor: pointer;
-            border-radius: 16px;
-        }
-
-        .item-img { width: 100%; height: 130px; object-fit: cover; background: #f1f5f9; pointer-events: none; }
-        
-        .badge {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.6rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: white;
-            z-index: 10;
-        }
-        .badge-oferta { background: #ef4444; }
-        .badge-nuevo { background: #10b981; }
-        .badge-popular { background: #f59e0b; }
-
+        .item-card { background: var(--surface); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; }
+        .item-img { width: 100%; height: 130px; object-fit: cover; background: #f1f5f9; }
         .item-info { padding: 10px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
         .item-cat { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: var(--primary); }
         .item-name { font-size: 0.9rem; font-weight: 600; line-height: 1.2; height: 2.4em; overflow: hidden; }
         .item-price { font-size: 1rem; font-weight: 700; color: var(--text-title); margin-top: auto; }
 
-        #profile-view {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            text-align: center;
-            min-height: 50vh;
-        }
-
-        /* Modal (Detalle) */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 1000;
-            justify-content: flex-end;
-            flex-direction: column;
-        }
-
-        .modal-content {
-            background: var(--surface);
-            width: 100%;
-            max-height: 90vh;
-            border-radius: 24px 24px 0 0;
-            padding: 20px;
-            padding-bottom: calc(var(--safe-area-bottom) + 20px);
-            transform: translateY(100%);
-            transition: transform 0.3s ease-out;
-            overflow-y: auto;
-            touch-action: none;
-        }
-
-        .modal-overlay.active { display: flex; }
-        .modal-overlay.active .modal-content { transform: translateY(0); }
-        .modal-handle { width: 40px; height: 5px; background: var(--border); border-radius: 10px; margin: 0 auto 15px; cursor: grab; }
-        .modal-img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
-        .history-tag {
-            font-size: 0.75rem;
-            color: var(--text-body);
-            background: var(--bg-app);
-            padding: 10px;
-            border-radius: 10px;
-            margin-top: 20px;
-            line-height: 1.4;
-        }
+        /* Estilos de las vistas especiales (Reporte/Nosotros) */
+        .card-custom { background: var(--surface); padding: 25px; border-radius: 24px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .hero-nosotros { text-align: center; padding: 20px 0; }
+        .logo-square { width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 15px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; }
 
         /* Bottom Nav */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0; width: 100%;
-            background: var(--surface);
-            padding: 10px 0 calc(var(--safe-area-bottom) + 10px) 0;
-            display: flex;
-            justify-content: space-around;
-            border-top: 1px solid var(--border);
-            z-index: 100;
-        }
-
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--surface); padding: 10px 0 calc(var(--safe-area-bottom) + 10px) 0; display: flex; justify-content: space-around; border-top: 1px solid var(--border); z-index: 100; }
         .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #94a3b8; text-decoration: none; font-size: 0.7rem; border:none; background:none; cursor:pointer; }
         .nav-link.active { color: var(--primary); }
     </style>
@@ -217,14 +93,14 @@
                     <i data-lucide="more-vertical" size="22"></i>
                 </div>
                 <div id="floatingMenu" class="floating-menu">
-                    <button class="menu-item" onclick="window.location.href='./reporte.html'">
+                    <button class="menu-item" onclick="changeTab('reporte')">
                         <i data-lucide="alert-triangle" size="18"></i> Reportar error
                     </button>
                     <button class="menu-item" onclick="toggleDarkMode()">
-                        <i data-lucide="moon" size="18" id="darkIcon"></i> <span id="darkText">Activar modo oscuro</span>
+                        <i data-lucide="moon" size="18" id="darkIcon"></i> <span id="darkText">Modo oscuro</span>
                     </button>
                     <div class="menu-divider"></div>
-                    <button class="menu-item" onclick="window.location.href='./sobrenosotros.html'">
+                    <button class="menu-item" onclick="changeTab('sobre')">
                         <i data-lucide="info" size="18"></i> Sobre nosotros
                     </button>
                 </div>
@@ -232,50 +108,73 @@
         </div>
         <div class="search-container" id="search-bar">
             <i data-lucide="search" size="18" color="#94a3b8"></i>
-            <input type="text" id="workerSearch" placeholder="Buscar producto..." oninput="filterWorkerProducts()">
+            <input type="text" id="workerSearch" placeholder="Buscar producto..." oninput="renderWorkerProducts()">
         </div>
     </header>
 
     <main class="app-content">
-        <div id="loader" style="text-align: center; padding: 20px;">Cargando catálogo...</div>
-        <div class="product-list" id="worker-grid"></div>
+        <section id="view-stock" class="view-section active">
+            <div id="loader" style="text-align: center; padding: 20px;">Cargando catálogo...</div>
+            <div class="product-list" id="worker-grid"></div>
+        </section>
 
-        <div id="profile-view">
-            <div style="background: #eef2ff; padding: 20px; border-radius: 50%; margin-bottom: 20px;">
-                <i data-lucide="construction" size="48" color="#4f46e5"></i>
+        <section id="view-ofertas" class="view-section">
+            <div class="product-list" id="ofertas-grid"></div>
+        </section>
+
+        <section id="view-perfil" class="view-section">
+            <div style="text-align: center; padding: 40px 20px;">
+                <div style="background: #eef2ff; padding: 20px; border-radius: 50%; width: fit-content; margin: 0 auto 20px;">
+                    <i data-lucide="construction" size="48" color="#4f46e5"></i>
+                </div>
+                <h2>Perfil de Equipo</h2>
+                <p style="color: var(--text-body);">Este apartado aún no está disponible.</p>
             </div>
-            <h2 style="font-size: 1.2rem; margin-bottom: 10px;">Perfil de Equipo</h2>
-            <p style="color: var(--text-body); line-height: 1.5;">Este apartado aún no está disponible.<br>Estamos trabajando en nuevas funciones para el equipo.</p>
-        </div>
+        </section>
+
+        <section id="view-reporte" class="view-section">
+            <div class="card-custom">
+                <h2>¿Qué sucedió?</h2>
+                <p>Reporta errores adjuntando una foto o descripción.</p>
+                <div style="margin-bottom:15px">
+                    <label style="display:block; font-weight:600; margin-bottom:5px;">Tipo de Error</label>
+                    <select style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--bg-app); color:var(--text-title);">
+                        <option>Precio incorrecto</option>
+                        <option>Imagen incorrecta</option>
+                        <option>Error de stock</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:15px">
+                    <label style="display:block; font-weight:600; margin-bottom:5px;">Descripción</label>
+                    <textarea style="width:100%; height:100px; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--bg-app); color:var(--text-title); resize:none;" placeholder="Detalla el error..."></textarea>
+                </div>
+                <button onclick="changeTab('stock')" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; font-weight:700;">Enviar Reporte</button>
+            </div>
+        </section>
+
+        <section id="view-sobre" class="view-section">
+            <div class="hero-nosotros">
+                <div class="logo-square"><i data-lucide="store" size="30"></i></div>
+                <h1 style="margin:0">Bodega Chichito</h1>
+                <p style="color:var(--text-body)">Calidad y confianza</p>
+            </div>
+            <div class="card-custom">
+                <h3>Nuestra Misión</h3>
+                <p style="color:var(--text-body); font-size:0.9rem;">Brindar una experiencia de compra rápida y confiable a toda nuestra comunidad.</p>
+                <button onclick="changeTab('stock')" style="width:100%; background:var(--bg-app); border:1px solid var(--border); padding:12px; border-radius:12px; margin-top:15px; color:var(--text-title);">Volver</button>
+            </div>
+        </section>
     </main>
 
-    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
-        <div class="modal-content" id="modalContent" onclick="event.stopPropagation()">
-            <div class="modal-handle"></div>
-            <img id="modalImg" class="modal-img" src="">
-            <div id="modalCat" class="item-cat"></div>
-            <h2 id="modalName" style="margin: 5px 0 10px 0;"></h2>
-            <div id="modalDesc" style="white-space: pre-line; color: var(--text-body); font-size: 0.95rem; margin-bottom: 15px;"></div>
-            <div id="modalPrice" style="font-size: 1.5rem; font-weight: 800; color: var(--primary);"></div>
-            <div id="modalHistory" class="history-tag"></div>
-        </div>
-    </div>
-
     <nav class="bottom-nav">
-        <button onclick="changeTab('stock')" class="nav-link active" id="tab-stock">
-            <i data-lucide="layout-grid"></i>Stock
-        </button>
-        <button onclick="changeTab('ofertas')" class="nav-link" id="tab-ofertas">
-            <i data-lucide="star"></i>Ofertas
-        </button>
-        <button onclick="changeTab('perfil')" class="nav-link" id="tab-perfil">
-            <i data-lucide="user"></i>Perfil
-        </button>
+        <button onclick="changeTab('stock')" class="nav-link active" id="btn-stock"><i data-lucide="layout-grid"></i>Stock</button>
+        <button onclick="changeTab('ofertas')" class="nav-link" id="btn-ofertas"><i data-lucide="star"></i>Ofertas</button>
+        <button onclick="changeTab('perfil')" class="nav-link" id="btn-perfil"><i data-lucide="user"></i>Perfil</button>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDubf98-7P2UI8XY-kJyt4GFIb9HT0Bh6g",
@@ -289,192 +188,78 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         let allProducts = [];
-        let currentTab = 'stock';
-
-        function timeAgo(date) {
-            if (!date) return "desconocido";
-            const seconds = Math.floor((new Date() - date.toDate()) / 1000);
-            let interval = Math.floor(seconds / 31536000);
-            if (interval > 1) return interval + " años";
-            interval = Math.floor(seconds / 2592000);
-            if (interval > 1) return interval + " meses";
-            interval = Math.floor(seconds / 86400);
-            if (interval > 1) return interval + " días";
-            interval = Math.floor(seconds / 3600);
-            if (interval > 1) return interval + " horas";
-            interval = Math.floor(seconds / 60);
-            if (interval > 1) return interval + " minutos";
-            return Math.floor(seconds) + " segundos";
-        }
 
         onSnapshot(collection(db, "productos"), (snap) => {
             allProducts = [];
             snap.forEach(doc => {
                 const data = doc.data();
-                if(data.visible !== false) {
-                    allProducts.push({id: doc.id, ...data});
-                }
+                if(data.visible !== false) allProducts.push({id: doc.id, ...data});
             });
             document.getElementById('loader').style.display = 'none';
             renderWorkerProducts();
         });
 
-        window.toggleMenu = (e) => {
-            e.stopPropagation();
-            document.getElementById('floatingMenu').classList.toggle('active');
-        }
-
-        window.toggleDarkMode = () => {
-            const body = document.body;
-            const text = document.getElementById('darkText');
-            const icon = document.getElementById('darkIcon');
-            
-            body.classList.toggle('dark-theme');
-            
-            if(body.classList.contains('dark-theme')) {
-                text.innerText = "Desactivar modo oscuro";
-                icon.setAttribute('data-lucide', 'sun');
-            } else {
-                text.innerText = "Activar modo oscuro";
-                icon.setAttribute('data-lucide', 'moon');
-            }
-            lucide.createIcons();
-            document.getElementById('floatingMenu').classList.remove('active');
-        }
-
-        document.addEventListener('click', () => {
-            document.getElementById('floatingMenu').classList.remove('active');
-        });
-
         window.changeTab = (tab) => {
-            currentTab = tab;
-            document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
-
-            const grid = document.getElementById('worker-grid');
-            const profile = document.getElementById('profile-view');
-            const searchBar = document.getElementById('search-bar');
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('floatingMenu').classList.remove('active');
+            
             const title = document.getElementById('app-title');
+            const searchBar = document.getElementById('search-bar');
 
-            grid.style.display = 'none';
-            profile.style.display = 'none';
-            searchBar.style.display = 'flex';
-
-            if (tab === 'stock') {
+            if(tab === 'stock') {
+                document.getElementById('view-stock').classList.add('active');
+                document.getElementById('btn-stock').classList.add('active');
                 title.innerText = "Bodega Chichito";
-                grid.style.display = 'grid';
-                renderWorkerProducts();
-            } else if (tab === 'ofertas') {
-                title.innerText = "Ofertas del Día";
-                grid.style.display = 'grid';
-                renderWorkerProducts();
-            } else if (tab === 'perfil') {
+                searchBar.style.display = 'flex';
+            } else if(tab === 'ofertas') {
+                document.getElementById('view-ofertas').classList.add('active');
+                document.getElementById('btn-ofertas').classList.add('active');
+                title.innerText = "Ofertas";
+                searchBar.style.display = 'flex';
+            } else if(tab === 'perfil') {
+                document.getElementById('view-perfil').classList.add('active');
+                document.getElementById('btn-perfil').classList.add('active');
                 title.innerText = "Mi Perfil";
                 searchBar.style.display = 'none';
-                profile.style.display = 'flex';
+            } else if(tab === 'reporte') {
+                document.getElementById('view-reporte').classList.add('active');
+                title.innerText = "Reportar Fallo";
+                searchBar.style.display = 'none';
+            } else if(tab === 'sobre') {
+                document.getElementById('view-sobre').classList.add('active');
+                title.innerText = "Nosotros";
+                searchBar.style.display = 'none';
             }
+            renderWorkerProducts();
             lucide.createIcons();
         };
 
         function renderWorkerProducts() {
-            const grid = document.getElementById('worker-grid');
-            grid.innerHTML = ''; 
+            const activeSection = document.querySelector('.view-section.active');
+            const grid = activeSection.querySelector('.product-list');
+            if(!grid) return;
+            grid.innerHTML = '';
             
-            let listToRender = [...allProducts];
-
-            if (currentTab === 'ofertas') {
-                listToRender = listToRender.filter(p => p.etiqueta && p.etiqueta.toLowerCase() === 'oferta');
-            }
-
             const term = document.getElementById('workerSearch').value.toLowerCase();
-            if (term) {
-                listToRender = listToRender.filter(p => p.nombre.toLowerCase().includes(term));
+            let filtered = allProducts.filter(p => p.nombre.toLowerCase().includes(term));
+            
+            if(activeSection.id === 'view-ofertas') {
+                filtered = filtered.filter(p => p.etiqueta?.toLowerCase() === 'oferta');
             }
 
-            if (listToRender.length === 0) {
-                grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:50px; color:gray;">No hay productos</div>`;
-                return;
-            }
-
-            listToRender.forEach(p => {
-                let badgeHtml = '';
-                if (p.etiqueta && p.etiqueta !== 'ninguno') {
-                    const tag = p.etiqueta.toLowerCase();
-                    badgeHtml = `<span class="badge badge-${tag}">${p.etiqueta}</span>`;
-                }
-
+            filtered.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'item-card';
-                card.onclick = () => openModal(p);
-                card.innerHTML = `
-                    ${badgeHtml}
-                    <img src="${p.imagen || 'https://via.placeholder.com/150'}" class="item-img" loading="lazy">
-                    <div class="item-info">
-                        <span class="item-cat">${p.categoria}</span>
-                        <span class="item-name">${p.nombre}</span>
-                        <span class="item-price">S/ ${p.precio}</span>
-                    </div>
-                `;
+                card.innerHTML = `<img src="${p.imagen}" class="item-img"><div class="item-info"><span class="item-cat">${p.categoria}</span><span class="item-name">${p.nombre}</span><span class="item-price">S/ ${p.precio}</span></div>`;
                 grid.appendChild(card);
             });
-            lucide.createIcons();
         }
 
-        window.openModal = (p) => {
-            const mContent = document.getElementById('modalContent');
-            mContent.style.transform = 'translateY(0)';
-            document.getElementById('modalImg').src = p.imagen || 'https://via.placeholder.com/150';
-            document.getElementById('modalCat').innerText = p.categoria;
-            document.getElementById('modalName').innerText = p.nombre;
-            document.getElementById('modalDesc').innerText = p.descripcion || 'Sin descripción disponible.';
-            document.getElementById('modalPrice').innerText = `S/ ${p.precio}`;
-            
-            const creado = p.createdAt ? `Creado hace ${timeAgo(p.createdAt)} por ${p.creadoPor || 'Admin'}` : '';
-            const actualizado = p.updatedAt ? `<br>Actualizado hace ${timeAgo(p.updatedAt)} por ${p.actualizadoPor || 'Admin'}` : '';
-            
-            document.getElementById('modalHistory').innerHTML = `<i data-lucide="history" size="14" style="vertical-align:middle; margin-right:5px;"></i> ${creado} ${actualizado}`;
-            document.getElementById('modalOverlay').classList.add('active');
-            lucide.createIcons();
-        };
-
-        window.closeModal = () => {
-            document.getElementById('modalOverlay').classList.remove('active');
-            document.getElementById('modalContent').style.transform = 'translateY(100%)';
-        };
-
-        window.filterWorkerProducts = () => {
-            renderWorkerProducts();
-        };
-
-        const modalContent = document.getElementById('modalContent');
-        let touchStartY = 0;
-        let touchMoveY = 0;
-
-        modalContent.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-            modalContent.style.transition = 'none';
-        }, { passive: true });
-
-        modalContent.addEventListener('touchmove', (e) => {
-            touchMoveY = e.touches[0].clientY;
-            const deltaY = touchMoveY - touchStartY;
-            if (deltaY > 0) {
-                modalContent.style.transform = `translateY(${deltaY}px)`;
-            }
-        }, { passive: true });
-
-        modalContent.addEventListener('touchend', () => {
-            const deltaY = touchMoveY - touchStartY;
-            modalContent.style.transition = 'transform 0.3s ease-out';
-            if (deltaY > 150) {
-                closeModal();
-            } else {
-                modalContent.style.transform = 'translateY(0)';
-            }
-            touchStartY = 0;
-            touchMoveY = 0;
-        });
-
+        window.toggleMenu = (e) => { e.stopPropagation(); document.getElementById('floatingMenu').classList.toggle('active'); };
+        window.toggleDarkMode = () => { document.body.classList.toggle('dark-theme'); lucide.createIcons(); };
+        document.addEventListener('click', () => document.getElementById('floatingMenu').classList.remove('active'));
+        window.renderWorkerProducts = renderWorkerProducts;
         lucide.createIcons();
     </script>
 </body>
