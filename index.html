@@ -3,225 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bodega Chichito - App Equipo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Bodega Chichito - Sistema Equipo</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root {
-            --primary: #4f46e5;
-            --bg-app: #f8fafc;
-            --surface: #ffffff;
-            --text-title: #0f172a;
-            --text-body: #64748b;
-            --border: #e2e8f0;
-            --safe-area-top: env(safe-area-inset-top, 0px);
-            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-        }
-
-        body.dark-theme {
-            --bg-app: #0f172a;
-            --surface: #1e293b;
-            --text-title: #f1f5f9;
-            --text-body: #94a3b8;
-            --border: #334155;
-        }
-
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-
+        /* Estilo de carga inicial */
         body { 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; background-color: var(--bg-app); color: var(--text-title);
-            overflow-x: hidden; user-select: none; transition: background-color 0.3s ease;
+            margin: 0; padding: 0; background: #f8fafc; 
+            font-family: sans-serif; display: flex; 
+            align-items: center; justify-content: center; height: 100vh; 
         }
-
-        /* --- SISTEMA DE VISTAS --- */
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-
-        /* --- HEADER --- */
-        .app-header {
-            position: fixed; top: 0; width: 100%; background: var(--surface);
-            backdrop-filter: blur(10px); padding: calc(var(--safe-area-top) + 15px) 20px 15px 20px;
-            z-index: 100; border-bottom: 1px solid var(--border);
+        .loader-container { text-align: center; }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #e2e8f0;
+            border-top: 4px solid #4f46e5; border-radius: 50%;
+            animation: spin 1s linear infinite; margin: 0 auto 15px;
         }
-        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .header-top h1 { margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--primary); }
-        
-        .back-btn { 
-            background: var(--bg-app); border: 1px solid var(--border); 
-            padding: 6px; border-radius: 10px; cursor: pointer; display: none; 
-            color: var(--text-title); align-items: center;
-        }
-
-        .floating-menu {
-            position: absolute; top: 35px; right: 0; background: var(--surface);
-            min-width: 200px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            display: none; flex-direction: column; padding: 8px 0; z-index: 200; border: 1px solid var(--border);
-        }
-        .floating-menu.active { display: flex; animation: fadeIn 0.2s ease; }
-        .menu-item { background: none; border: none; padding: 12px 20px; text-align: left; font-size: 0.95rem; color: var(--text-title); cursor: pointer; display: flex; align-items: center; gap: 10px; }
-        
-        .app-content { padding: calc(var(--safe-area-top) + 120px) 15px calc(var(--safe-area-bottom) + 80px) 15px; }
-        
-        /* --- PRODUCTOS --- */
-        .product-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .item-card { background: var(--surface); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; position: relative; cursor: pointer; border: 1px solid var(--border); }
-        .item-img { width: 100%; height: 130px; object-fit: cover; background: #f1f5f9; }
-        .item-info { padding: 10px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
-        .item-name { font-size: 0.9rem; font-weight: 600; line-height: 1.2; height: 2.4em; overflow: hidden; }
-        .item-price { font-size: 1rem; font-weight: 700; color: var(--text-title); margin-top: auto; }
-        
-        /* --- ESTILOS REPORTE --- */
-        .card-reporte { background: var(--surface); padding: 20px; border-radius: 20px; border: 1px solid var(--border); }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text-body); }
-        input, select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-app); font-family: inherit; color: var(--text-title); outline: none; }
-        .file-upload-container { border: 2px dashed var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; background: var(--bg-app); display: flex; flex-direction: column; align-items: center; min-height: 100px; transition: 0.2s; }
-        .file-upload-container:active { background: #eef2ff; }
-        #imagePreview { width: 100%; max-height: 150px; object-fit: contain; border-radius: 10px; margin-top: 10px; display: none; }
-        .submit-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 10px; }
-
-        /* --- ESTILOS SOBRE NOSOTROS --- */
-        .hero { padding: 20px 0; text-align: center; }
-        .logo-placeholder { width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; box-shadow: 0 8px 15px rgba(79, 70, 229, 0.2); }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-item { background: var(--primary); color: white; padding: 15px; border-radius: 15px; text-align: center; }
-        .card-info { background: var(--surface); padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .card-info h2 { font-size: 1.1rem; margin-top: 0; display: flex; align-items: center; gap: 8px; }
-
-        /* --- NAV & MODAL --- */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--surface); padding: 10px 0 calc(var(--safe-area-bottom) + 10px) 0; display: flex; justify-content: space-around; border-top: 1px solid var(--border); z-index: 100; }
-        .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #94a3b8; border:none; background:none; font-size: 0.7rem; cursor:pointer; }
-        .nav-link.active { color: var(--primary); }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1000; justify-content: flex-end; flex-direction: column; }
-        .modal-content { background: var(--surface); width: 100%; border-radius: 24px 24px 0 0; padding: 20px; transform: translateY(100%); transition: transform 0.3s ease-out; }
-        .modal-overlay.active { display: flex; }
-        .modal-overlay.active .modal-content { transform: translateY(0); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .msg { color: #64748b; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
-    <header class="app-header">
-        <div class="header-top">
-            <div class="header-left">
-                <button id="backBtn" class="back-btn" onclick="changeTab('stock')">
-                    <i data-lucide="arrow-left" size="20"></i>
-                </button>
-                <h1 id="app-title">Bodega Chichito</h1>
-            </div>
-            <div class="menu-container">
-                <div onclick="toggleMenu(event)" style="cursor:pointer; padding: 5px;"><i data-lucide="more-vertical" size="22"></i></div>
-                <div id="floatingMenu" class="floating-menu">
-                    <button class="menu-item" onclick="changeTab('reporte')"><i data-lucide="alert-triangle" size="18"></i> Reportar error</button>
-                    <button class="menu-item" onclick="toggleDarkMode()"><i data-lucide="moon" size="18" id="darkIcon"></i> <span id="darkText">Modo oscuro</span></button>
-                    <div class="menu-divider" style="border-top: 1px solid var(--border); margin: 4px 0;"></div>
-                    <button class="menu-item" onclick="changeTab('sobre')"><i data-lucide="info" size="18"></i> Sobre nosotros</button>
-                </div>
-            </div>
-        </div>
-        <div class="search-container" id="search-bar" style="background: var(--bg-app); border-radius: 12px; padding: 8px 15px; display: flex; align-items: center; gap: 10px;">
-            <i data-lucide="search" size="18" color="#94a3b8"></i>
-            <input type="text" id="workerSearch" placeholder="Buscar producto..." oninput="renderWorkerProducts()" style="border:none; background:transparent; width:100%; outline:none; color:var(--text-title);">
-        </div>
-    </header>
-
-    <main class="app-content">
-        <section id="view-stock" class="view-section active">
-            <div id="loader" style="text-align: center; padding: 20px;">Cargando catálogo...</div>
-            <div class="product-list" id="worker-grid"></div>
-        </section>
-
-        <section id="view-ofertas" class="view-section">
-            <div class="product-list" id="ofertas-grid"></div>
-        </section>
-
-        <section id="view-perfil" class="view-section" style="text-align: center; padding: 40px 20px;">
-            <div style="background: #eef2ff; padding: 20px; border-radius: 50%; width: fit-content; margin: 0 auto 20px;">
-                <i data-lucide="construction" size="48" color="#4f46e5"></i>
-            </div>
-            <h2>Perfil de Equipo</h2>
-            <p style="color: var(--text-body);">Este apartado aún no está disponible.</p>
-        </section>
-
-        <section id="view-reporte" class="view-section">
-            <div class="card-reporte">
-                <h2>¿Qué sucedió?</h2>
-                <p style="color:var(--text-body); font-size:0.9rem; margin-bottom:20px;">Reporta errores adjuntando una foto o descripción.</p>
-                
-                <div class="form-group">
-                    <label>Tipo de Error</label>
-                    <select id="errorType">
-                        <option value="precio">Precio incorrecto</option>
-                        <option value="imagen">Imagen incorrecta</option>
-                        <option value="stock">Error de stock</option>
-                        <option value="app">Fallo técnico</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Evidencia Visual</label>
-                    <div class="file-upload-container" onclick="document.getElementById('fileInput').click()">
-                        <i data-lucide="camera" size="28" color="#4f46e5" id="camIcon"></i>
-                        <p id="camText" style="font-size: 0.8rem; color: var(--text-body); margin: 5px 0 0 0;">Toca para capturar o subir</p>
-                        <img id="imagePreview" src="">
-                    </div>
-                    <input type="file" id="fileInput" accept="image/*" hidden onchange="previewFile()">
-                </div>
-
-                <div class="form-group">
-                    <label>Descripción detallada</label>
-                    <textarea id="reportDesc" placeholder="Escribe aquí los detalles..."></textarea>
-                </div>
-
-                <button class="submit-btn" onclick="sendReport()">
-                    <i data-lucide="send" size="18"></i> Enviar Reporte
-                </button>
-            </div>
-        </section>
-
-        <section id="view-sobre" class="view-section">
-            <div class="hero">
-                <div class="logo-placeholder"><i data-lucide="store" size="30"></i></div>
-                <h1>Bodega Chichito</h1>
-                <p style="color:var(--text-body); margin-top:5px;">Calidad y confianza en tu hogar</p>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-item"><span style="display:block; font-size:1.2rem; font-weight:800;">10+</span>Años</div>
-                <div class="stat-item" style="background: #10b981;"><span style="display:block; font-size:1.2rem; font-weight:800;">100%</span>Fiel</div>
-            </div>
-            <div class="card-info">
-                <h2><i data-lucide="history" size="18" color="#4f46e5"></i> Historia</h2>
-                <p style="font-size: 0.9rem; color:var(--text-body); line-height:1.5;">Bodega Chichito nació con la visión de acercar los mejores productos a nuestra comunidad. Lo que empezó como algo familiar, hoy es un referente gracias a ti.</p>
-            </div>
-            <div class="card-info">
-                <h2><i data-lucide="target" size="18" color="#4f46e5"></i> Nuestra Misión</h2>
-                <p style="font-size: 0.9rem; color:var(--text-body); line-height:1.5;">Brindar una experiencia de compra rápida, confiable y con los mejores precios del mercado.</p>
-            </div>
-        </section>
-    </main>
-
-    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
-        <div class="modal-content" id="modalContent" onclick="event.stopPropagation()">
-            <div style="width:40px; height:5px; background:var(--border); border-radius:10px; margin: 0 auto 15px;"></div>
-            <img id="modalImg" src="" style="width: 100%; height: 200px; object-fit: cover; border-radius: 15px; margin-bottom: 15px;">
-            <h2 id="modalName" style="margin:0 0 5px 0; font-size:1.3rem;"></h2>
-            <p id="modalDesc" style="color: var(--text-body); font-size:0.95rem; margin-bottom:15px;"></p>
-            <div id="modalPrice" style="font-size: 1.6rem; font-weight: 800; color: var(--primary);"></div>
-        </div>
+    <div id="boot-screen" class="loader-container">
+        <div class="spinner"></div>
+        <div class="msg">Sincronizando sistema...</div>
     </div>
 
-    <nav class="bottom-nav" id="bottomNav">
-        <button onclick="changeTab('stock')" class="nav-link active" id="tab-stock"><i data-lucide="layout-grid"></i>Stock</button>
-        <button onclick="changeTab('ofertas')" class="nav-link" id="tab-ofertas"><i data-lucide="star"></i>Ofertas</button>
-        <button onclick="changeTab('perfil')" class="nav-link" id="tab-perfil"><i data-lucide="user"></i>Perfil</button>
-    </nav>
+    <div id="app-root"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDubf98-7P2UI8XY-kJyt4GFIb9HT0Bh6g",
@@ -234,130 +46,50 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        let allProducts = [];
 
-        onSnapshot(collection(db, "productos"), (snap) => {
-            allProducts = [];
-            snap.forEach(doc => {
-                const data = doc.data();
-                if(data.visible !== false) allProducts.push({id: doc.id, ...data});
-            });
-            document.getElementById('loader').style.display = 'none';
-            renderWorkerProducts();
+        // Referencia a la configuración de la app en la nube
+        const appRef = doc(db, "configuracion", "app");
+
+        // ESCUCHA EN TIEMPO REAL
+        onSnapshot(appRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                const cloudCode = data.codigo_fuente;
+                const cloudVersion = data.version;
+
+                // Guardar en memoria local por si se quedan sin internet
+                localStorage.setItem('local_app_code', cloudCode);
+                localStorage.setItem('local_app_version', cloudVersion);
+
+                ejecutarApp(cloudCode);
+            } else {
+                document.querySelector('.msg').innerText = "Error: Sistema no configurado en Admin.";
+            }
         });
 
-        window.changeTab = (tab) => {
-            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('floatingMenu').classList.remove('active');
+        function ejecutarApp(codigo) {
+            if (!codigo) return;
             
-            const title = document.getElementById('app-title');
-            const searchBar = document.getElementById('search-bar');
-            const backBtn = document.getElementById('backBtn');
-            const bottomNav = document.getElementById('bottomNav');
-
-            // Reset UI básica
-            backBtn.style.display = 'none';
-            bottomNav.style.display = 'flex';
-            searchBar.style.display = 'flex';
-
-            if(tab === 'stock') {
-                document.getElementById('view-stock').classList.add('active');
-                document.getElementById('tab-stock').classList.add('active');
-                title.innerText = "Bodega Chichito";
-            } else if(tab === 'ofertas') {
-                document.getElementById('view-ofertas').classList.add('active');
-                document.getElementById('tab-ofertas').classList.add('active');
-                title.innerText = "Ofertas";
-            } else if(tab === 'perfil') {
-                document.getElementById('view-perfil').classList.add('active');
-                document.getElementById('tab-perfil').classList.add('active');
-                title.innerText = "Mi Perfil";
-                searchBar.style.display = 'none';
-            } else if(tab === 'reporte') {
-                document.getElementById('view-reporte').classList.add('active');
-                title.innerText = "Reportar";
-                searchBar.style.display = 'none';
-                backBtn.style.display = 'flex';
-                bottomNav.style.display = 'none';
-            } else if(tab === 'sobre') {
-                document.getElementById('view-sobre').classList.add('active');
-                title.innerText = "Nosotros";
-                searchBar.style.display = 'none';
-                backBtn.style.display = 'flex';
-                bottomNav.style.display = 'none';
-            }
-            renderWorkerProducts();
-            lucide.createIcons();
-        };
-
-        window.previewFile = () => {
-            const preview = document.getElementById('imagePreview');
-            const file = document.getElementById('fileInput').files[0];
-            const icon = document.getElementById('camIcon');
-            const text = document.getElementById('camText');
-            const reader = new FileReader();
-
-            reader.onloadend = () => {
-                preview.src = reader.result;
-                preview.style.display = 'block';
-                icon.style.display = 'none';
-                text.style.display = 'none';
-            }
-            if (file) reader.readAsDataURL(file);
-        };
-
-        window.sendReport = () => {
-            const desc = document.getElementById('reportDesc').value;
-            if(!desc) { alert("Por favor escribe una descripción"); return; }
-            alert("¡Gracias! Tu reporte ha sido enviado.");
-            changeTab('stock');
-        };
-
-        function renderWorkerProducts() {
-            const activeView = document.querySelector('.view-section.active');
-            const grid = activeView.querySelector('.product-list');
-            if(!grid) return;
-            grid.innerHTML = '';
-            
-            const term = document.getElementById('workerSearch').value.toLowerCase();
-            let filtered = allProducts.filter(p => p.nombre.toLowerCase().includes(term));
-            
-            if(activeView.id === 'view-ofertas') {
-                filtered = filtered.filter(p => p.etiqueta?.toLowerCase() === 'oferta');
-            }
-
-            if(filtered.length === 0) {
-                grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; color:gray; padding:20px;">Sin productos</p>';
-                return;
-            }
-
-            filtered.forEach(p => {
-                const card = document.createElement('div');
-                card.className = 'item-card';
-                card.onclick = () => {
-                    document.getElementById('modalImg').src = p.imagen;
-                    document.getElementById('modalName').innerText = p.nombre;
-                    document.getElementById('modalDesc').innerText = p.descripcion || 'Sin descripción';
-                    document.getElementById('modalPrice').innerText = `S/ ${p.precio}`;
-                    document.getElementById('modalOverlay').classList.add('active');
-                };
-                card.innerHTML = `<img src="${p.imagen}" class="item-img"><div class="item-info"><span class="item-name">${p.nombre}</span><span class="item-price">S/ ${p.precio}</span></div>`;
-                grid.appendChild(card);
-            });
+            // Reemplazamos el contenido de la página con el código de la nube
+            // Usamos document.open/write para reconstruir el HTML completamente
+            document.open();
+            document.write(codigo);
+            document.close();
         }
 
-        window.closeModal = () => document.getElementById('modalOverlay').classList.remove('active');
-        window.toggleMenu = (e) => { e.stopPropagation(); document.getElementById('floatingMenu').classList.toggle('active'); };
-        window.toggleDarkMode = () => { 
-            document.body.classList.toggle('dark-theme'); 
-            const isDark = document.body.classList.contains('dark-theme');
-            document.getElementById('darkText').innerText = isDark ? "Modo claro" : "Modo oscuro";
-            lucide.createIcons(); 
-        };
-        
-        document.addEventListener('click', () => document.getElementById('floatingMenu').classList.remove('active'));
-        lucide.createIcons();
+        // Si no hay internet al iniciar, cargar la última versión guardada
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (!window.navigator.onLine) {
+                    const savedCode = localStorage.getItem('local_app_code');
+                    if (savedCode) {
+                        ejecutarApp(savedCode);
+                    } else {
+                        document.querySelector('.msg').innerText = "Sin conexión y sin datos previos.";
+                    }
+                }
+            }, 3000);
+        });
     </script>
 </body>
-            </html>
+</html>
