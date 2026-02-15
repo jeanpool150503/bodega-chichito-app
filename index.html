@@ -3,114 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bodega Chichito - Sistema Equipo</title>
+    <title>Bodega Pool - Captura</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { margin: 0; padding: 0; background: #f8fafc; font-family: sans-serif; }
-        
-        /* Barra de progreso superior */
-        #update-progress-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 5px;
-            background: rgba(79, 70, 229, 0.1); z-index: 10001; display: none;
-        }
-        #update-bar {
-            width: 0%; height: 100%; 
-            background: linear-gradient(90deg, #4f46e5, #818cf8);
-            transition: width 0.3s ease; 
+        :root {
+            --primary: #4f46e5;
+            --bg-app: #f8fafc;
+            --surface: #ffffff;
+            --text-title: #0f172a;
+            --text-body: #64748b;
+            --border: #e2e8f0;
+            --safe-area-top: env(safe-area-inset-top, 0px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        /* Mensaje flotante */
-        #update-status {
-            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-            background: #1e293b; color: white;
-            padding: 6px 16px; border-radius: 30px; font-size: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none;
-            z-index: 10000; font-weight: 600;
+        body.dark-mode {
+            --bg-app: #0f172a;
+            --surface: #1e293b;
+            --text-title: #f1f5f9;
+            --text-body: #94a3b8;
+            --border: #334155;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; background-color: var(--bg-app); color: var(--text-title);
+            overflow: hidden; height: 100vh;
+        }
+
+        /* Header */
+        .app-header {
+            position: fixed; top: 0; width: 100%; background: var(--surface);
+            padding: calc(var(--safe-area-top) + 15px) 20px 15px 20px;
+            z-index: 100; border-bottom: 1px solid var(--border);
+        }
+
+        /* Camera Container */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 80px;
+        }
+
+        #video-preview, #canvas-result {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas-result { display: none; }
+
+        /* Controls */
+        .camera-controls {
+            position: fixed;
+            bottom: calc(var(--safe-area-bottom) + 40px);
+            left: 0; width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            z-index: 200;
+        }
+
+        .shutter-btn {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            background: white;
+            border: 5px solid rgba(79, 70, 229, 0.3);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; outline: none;
+        }
+
+        .shutter-btn:active { transform: scale(0.9); }
+
+        .action-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-title);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .status-badge {
+            position: absolute; top: 110px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white; padding: 5px 15px;
+            border-radius: 20px; font-size: 0.8rem;
+            backdrop-filter: blur(5px);
+            z-index: 150;
         }
     </style>
 </head>
 <body>
 
-    <div id="update-progress-container"><div id="update-bar"></div></div>
-    <div id="update-status">Actualizando aplicación...</div>
-    <div id="app-root"></div>
+    <header class="app-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--primary);">Bodega Pool Cam</h1>
+            <i data-lucide="settings" style="cursor:pointer"></i>
+        </div>
+    </header>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <div class="status-badge" id="status-text">Cámara Trasera Activa</div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDubf98-7P2UI8XY-kJyt4GFIb9HT0Bh6g",
-            authDomain: "caneteservicios.firebaseapp.com",
-            projectId: "caneteservicios",
-            storageBucket: "caneteservicios.firebasestorage.app",
-            messagingSenderId: "1074586569660",
-            appId: "1:1074586569660:web:00f2252b017071609379b9"
-        };
+    <main class="camera-container">
+        <video id="video-preview" autoplay playsinline muted></video>
+        <canvas id="canvas-result"></canvas>
+    </main>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const appRef = doc(db, "configuracion", "app");
+    <div class="camera-controls">
+        <button class="action-btn" id="retry-btn" style="visibility: hidden;" onclick="resetCamera()">
+            <i data-lucide="refresh-ccw"></i>
+        </button>
+        
+        <button class="shutter-btn" id="capture-btn" onclick="takePhoto()">
+            <div style="width: 50px; height: 50px; background: var(--primary); border-radius: 50%;"></div>
+        </button>
 
-        // Sonido de éxito
-        function playSuccessSound() {
-            const context = new (window.AudioContext || window.webkitAudioContext)();
-            const playNote = (freq, start, duration) => {
-                const osc = context.createOscillator();
-                const gain = context.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, start);
-                gain.gain.setValueAtTime(0.1, start);
-                gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
-                osc.connect(gain);
-                gain.connect(context.destination);
-                osc.start(start);
-                osc.stop(start + duration);
-            };
-            playNote(523.25, context.currentTime, 0.1);
-            playNote(659.25, context.currentTime + 0.12, 0.2);
-        }
+        <button class="action-btn" id="save-btn" style="visibility: hidden;" onclick="savePhoto()">
+            <i data-lucide="download"></i>
+        </button>
+    </div>
 
-        function ejecutarApp(codigo) {
-            if (!codigo) return;
-            document.open();
-            document.write(codigo);
-            document.close();
-        }
+    <script>
+        const video = document.getElementById('video-preview');
+        const canvas = document.getElementById('canvas-result');
+        const retryBtn = document.getElementById('retry-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const captureBtn = document.getElementById('capture-btn');
 
-        // 1. CARGA INMEDIATA
-        const savedCode = localStorage.getItem('local_app_code');
-        const localVersion = localStorage.getItem('local_app_version');
-        if (savedCode) ejecutarApp(savedCode);
-
-        // 2. VERIFICACIÓN SILENCIOSA (Sin el botón de actualizar que te bloqueaba)
-        onSnapshot(appRef, (snap) => {
-            if (snap.exists()) {
-                const data = snap.data();
-                const cloudCode = data.codigo_fuente;
-                const cloudVersion = data.version;
-
-                if (cloudVersion !== localVersion) {
-                    document.getElementById('update-progress-container').style.display = 'block';
-                    document.getElementById('update-status').style.display = 'block';
-                    
-                    let progress = 0;
-                    const bar = document.getElementById('update-bar');
-                    
-                    const interval = setInterval(() => {
-                        progress += 5;
-                        bar.style.width = progress + '%';
-                        
-                        if (progress >= 100) {
-                            clearInterval(interval);
-                            localStorage.setItem('local_app_code', cloudCode);
-                            localStorage.setItem('local_app_version', cloudVersion);
-                            try { playSuccessSound(); } catch(e) {}
-                            setTimeout(() => { location.reload(); }, 500);
-                        }
-                    }, 40); 
-                }
+        // Iniciar cámara trasera
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: { exact: "environment" } 
+                    },
+                    audio: false
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error al acceder a la cámara trasera, intentando cámara genérica:", err);
+                // Fallback por si no detecta "environment" (ej. en PC)
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
             }
-        });
+        }
+
+        function takePhoto() {
+            // Ajustar tamaño del canvas al video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Dibujar frame
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // UI Switch
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+            captureBtn.style.display = 'none';
+            retryBtn.style.visibility = 'visible';
+            saveBtn.style.visibility = 'visible';
+            document.getElementById('status-text').innerText = "Vista Previa";
+        }
+
+        function resetCamera() {
+            video.style.display = 'block';
+            canvas.style.display = 'none';
+            captureBtn.style.display = 'flex';
+            retryBtn.style.visibility = 'hidden';
+            saveBtn.style.visibility = 'hidden';
+            document.getElementById('status-text').innerText = "Cámara Trasera Activa";
+        }
+
+        function savePhoto() {
+            const link = document.createElement('a');
+            link.download = `captura_bodega_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            alert("Foto guardada en tu galería");
+            resetCamera();
+        }
+
+        // Inicializar
+        initCamera();
+        lucide.createIcons();
     </script>
 </body>
 </html>
