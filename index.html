@@ -4,31 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bodega Chichito - Sistema Equipo</title>
-    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Estilo de carga inicial */
-        body { 
-            margin: 0; padding: 0; background: #f8fafc; 
-            font-family: sans-serif; display: flex; 
-            align-items: center; justify-content: center; height: 100vh; 
+        body { margin: 0; padding: 0; background: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Barra de progreso superior */
+        #update-progress-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 5px;
+            background: rgba(79, 70, 229, 0.1); z-index: 10001; display: none;
         }
-        .loader-container { text-align: center; }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid #e2e8f0;
-            border-top: 4px solid #4f46e5; border-radius: 50%;
-            animation: spin 1s linear infinite; margin: 0 auto 15px;
+        #update-bar {
+            width: 0%; height: 100%; 
+            background: linear-gradient(90deg, #4f46e5, #818cf8);
+            transition: width 0.3s ease; 
+            box-shadow: 0 0 8px rgba(79, 70, 229, 0.4);
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .msg { color: #64748b; font-size: 0.9rem; }
+
+        /* Mensaje flotante */
+        #update-status {
+            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+            background: #1e293b; color: white;
+            padding: 6px 16px; border-radius: 30px; font-size: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none;
+            z-index: 10000; font-weight: 600; letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="boot-screen" class="loader-container">
-        <div class="spinner"></div>
-        <div class="msg">Sincronizando sistema...</div>
-    </div>
-
+    <div id="update-progress-container"><div id="update-bar"></div></div>
+    <div id="update-status">Actualizando aplicación...</div>
     <div id="app-root"></div>
 
     <script type="module">
@@ -46,49 +50,53 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        // Referencia a la configuración de la app en la nube
         const appRef = doc(db, "configuracion", "app");
-
-        // ESCUCHA EN TIEMPO REAL
-        onSnapshot(appRef, (snap) => {
-            if (snap.exists()) {
-                const data = snap.data();
-                const cloudCode = data.codigo_fuente;
-                const cloudVersion = data.version;
-
-                // Guardar en memoria local por si se quedan sin internet
-                localStorage.setItem('local_app_code', cloudCode);
-                localStorage.setItem('local_app_version', cloudVersion);
-
-                ejecutarApp(cloudCode);
-            } else {
-                document.querySelector('.msg').innerText = "Error: Sistema no configurado en Admin.";
-            }
-        });
 
         function ejecutarApp(codigo) {
             if (!codigo) return;
-            
-            // Reemplazamos el contenido de la página con el código de la nube
-            // Usamos document.open/write para reconstruir el HTML completamente
             document.open();
             document.write(codigo);
             document.close();
         }
 
-        // Si no hay internet al iniciar, cargar la última versión guardada
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                if (!window.navigator.onLine) {
-                    const savedCode = localStorage.getItem('local_app_code');
-                    if (savedCode) {
-                        ejecutarApp(savedCode);
-                    } else {
-                        document.querySelector('.msg').innerText = "Sin conexión y sin datos previos.";
-                    }
+        // Carga inmediata si existe en memoria
+        const savedCode = localStorage.getItem('local_app_code');
+        if (savedCode) ejecutarApp(savedCode);
+
+        // Escucha de actualizaciones
+        onSnapshot(appRef, (snap) => {
+            if (snap.exists()) {
+                const data = snap.data();
+                const cloudCode = data.codigo_fuente;
+                const cloudVersion = data.version;
+                const localVersion = localStorage.getItem('local_app_version');
+
+                if (cloudVersion !== localVersion) {
+                    // Activar visuales de carga
+                    document.getElementById('update-progress-container').style.display = 'block';
+                    document.getElementById('update-status').style.display = 'block';
+                    
+                    let progress = 0;
+                    const bar = document.getElementById('update-bar');
+                    
+                    const interval = setInterval(() => {
+                        progress += 2; // Carga suave
+                        if(progress <= 98) bar.style.width = progress + '%';
+                        
+                        if (progress >= 100) {
+                            clearInterval(interval);
+                            bar.style.width = '100%';
+                            
+                            localStorage.setItem('local_app_code', cloudCode);
+                            localStorage.setItem('local_app_version', cloudVersion);
+                            
+                            setTimeout(() => {
+                                location.reload();
+                            }, 400);
+                        }
+                    }, 40); 
                 }
-            }, 3000);
+            }
         });
     </script>
 </body>
