@@ -5,27 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bodega Chichito - Sistema Equipo</title>
     <style>
-        body { margin: 0; padding: 0; background: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 0; background: #f8fafc; font-family: sans-serif; }
         
-        /* Barra de progreso superior */
         #update-progress-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 5px;
-            background: rgba(79, 70, 229, 0.1); z-index: 10001; display: none;
+            background: rgba(79, 70, 229, 0.1); z-index: 10001; 
+            display: none; 
         }
         #update-bar {
             width: 0%; height: 100%; 
             background: linear-gradient(90deg, #4f46e5, #818cf8);
-            transition: width 0.3s ease; 
-            box-shadow: 0 0 8px rgba(79, 70, 229, 0.4);
+            transition: width 0.2s linear; 
         }
 
-        /* Mensaje flotante */
         #update-status {
-            position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+            position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
             background: #1e293b; color: white;
-            padding: 6px 16px; border-radius: 30px; font-size: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none;
-            z-index: 10000; font-weight: 600; letter-spacing: 0.5px;
+            padding: 8px 20px; border-radius: 30px; font-size: 13px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            display: none; 
+            z-index: 10000; font-weight: 600;
         }
     </style>
 </head>
@@ -33,6 +32,7 @@
 
     <div id="update-progress-container"><div id="update-bar"></div></div>
     <div id="update-status">Actualizando aplicación...</div>
+    
     <div id="app-root"></div>
 
     <script type="module">
@@ -52,6 +52,26 @@
         const db = getFirestore(app);
         const appRef = doc(db, "configuracion", "app");
 
+        // FUNCIÓN PARA EL SONIDO DE ÉXITO (BIP-BIP)
+        function playSuccessSound() {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            const playNote = (freq, start, duration) => {
+                const osc = context.createOscillator();
+                const gain = context.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, start);
+                gain.gain.setValueAtTime(0.1, start);
+                gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
+                osc.connect(gain);
+                gain.connect(context.destination);
+                osc.start(start);
+                osc.stop(start + duration);
+            };
+            // Dos notas rápidas hacia arriba (Efecto "Listo")
+            playNote(523.25, context.currentTime, 0.1); // Do
+            playNote(659.25, context.currentTime + 0.12, 0.2); // Mi
+        }
+
         function ejecutarApp(codigo) {
             if (!codigo) return;
             document.open();
@@ -59,20 +79,18 @@
             document.close();
         }
 
-        // Carga inmediata si existe en memoria
         const savedCode = localStorage.getItem('local_app_code');
+        const localVersion = localStorage.getItem('local_app_version');
+        
         if (savedCode) ejecutarApp(savedCode);
 
-        // Escucha de actualizaciones
         onSnapshot(appRef, (snap) => {
             if (snap.exists()) {
                 const data = snap.data();
                 const cloudCode = data.codigo_fuente;
                 const cloudVersion = data.version;
-                const localVersion = localStorage.getItem('local_app_version');
 
                 if (cloudVersion !== localVersion) {
-                    // Activar visuales de carga
                     document.getElementById('update-progress-container').style.display = 'block';
                     document.getElementById('update-status').style.display = 'block';
                     
@@ -80,19 +98,21 @@
                     const bar = document.getElementById('update-bar');
                     
                     const interval = setInterval(() => {
-                        progress += 2; // Carga suave
-                        if(progress <= 98) bar.style.width = progress + '%';
+                        progress += 5;
+                        bar.style.width = progress + '%';
                         
                         if (progress >= 100) {
                             clearInterval(interval);
-                            bar.style.width = '100%';
                             
                             localStorage.setItem('local_app_code', cloudCode);
                             localStorage.setItem('local_app_version', cloudVersion);
                             
+                            // Tocar sonido antes de recargar
+                            try { playSuccessSound(); } catch(e) {}
+                            
                             setTimeout(() => {
                                 location.reload();
-                            }, 400);
+                            }, 500); // Damos tiempo a que suene el audio
                         }
                     }, 40); 
                 }
